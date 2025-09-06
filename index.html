@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Quiz — My AI Assistant</title>
+<style>
+body {font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px;}
+.quiz-container {max-width: 800px; margin: auto; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);}
+h1 {text-align: center; color: #0f62fe;}
+.question {font-weight: bold; margin: 20px 0 10px;}
+.option {margin: 10px 0;}
+button {padding: 10px 18px; border: none; background: #0f62fe; color: #fff; border-radius: 8px; cursor: pointer;}
+button:hover {background: #0353e9;}
+.result {text-align: center; padding: 20px;}
+.hidden {display: none;}
+.freebie-link {display:inline-block; margin-top:15px; padding:10px 18px; background:green; color:#fff; text-decoration:none; border-radius:6px;}
+</style>
+</head>
+<body>
+<div class="quiz-container">
+<h1>AI Quiz — My AI Assistant</h1>
+<div id="quiz"></div>
+<div id="actions">
+<button id="nextBtn">Next</button>
+</div>
+<div id="result" class="result hidden">
+<h2>Your Score: <span id="scoreText"></span></h2>
+<div id="freebieMsg" class="hidden">
+🎉 Perfect! 
+<a class="freebie-link" href="https://docs.google.com/forms/d/e/1FAIpQLSfp2TcpnHEMxPXLGIfTK5xhkouF5SoVFIxkt29VOt61OTvkDQ/viewform" target="_blank">Claim your freebie</a>
+</div>
+<button onclick="startQuiz()">Retake Quiz</button>
+</div>
+</div>
+<script>
+const TOTAL_QUESTIONS = 7;
+const questionBank = [
+{q:"What does AI stand for?", a:["Artificial Insight","Artificial Intelligence","Automatic Interaction"], correct:1},
+{q:"Which type of AI mimics the human brain?", a:["Neural Networks","Rule Engines","Search Trees"], correct:0},
+{q:"Which company created ChatGPT?", a:["Microsoft","OpenAI","Google"], correct:1},
+{q:"Which is a branch of AI focused on learning from data?", a:["Machine Learning","Cryptography","Compiler Design"], correct:0},
+{q:"What is supervised learning?", a:["Learning from labeled data","Learning without data","Learning by playing games"], correct:0},
+{q:"Which of these is a programming language popular in AI?", a:["Python","PHP","COBOL"], correct:0},
+{q:"Which term describes AI that can perform any human task?", a:["Narrow AI","General AI","Specific AI"], correct:1},
+{q:"Which algorithm is often used for decision trees?", a:["ID3","RSA","MD5"], correct:0},
+{q:"Which AI model processes human language?", a:["NLP","UML","SQL"], correct:0},
+{q:"What does NLP stand for?", a:["Neural Learning Processing","Natural Language Processing","Network Layer Protocol"], correct:1},
+{q:"Which AI concept involves rewarding correct actions?", a:["Reinforcement Learning","Regression","Recognition"], correct:0},
+{q:"Which company developed DeepMind?", a:["Amazon","Google","Meta"], correct:1},
+{q:"Which is an example of computer vision?", a:["Face recognition","Spreadsheet formulas","Text editing"], correct:0},
+{q:"Which neural network type works well for image data?", a:["CNN","RNN","BFS"], correct:0},
+{q:"Which neural network type is often used for sequence data?", a:["CNN","RNN","SVM"], correct:1},
+{q:"Which activation function outputs between 0 and 1?", a:["ReLU","Sigmoid","Tanh"], correct:1},
+{q:"What does GPU stand for?", a:["General Processing Unit","Graphics Processing Unit","Graphical Program Utility"], correct:1},
+{q:"Which loss function is common in classification?", a:["Cross-Entropy","Mean Squared Error","L1 Regularization"], correct:0},
+{q:"What does overfitting mean?", a:["Model memorizes training data","Model underperforms","Model runs too fast"], correct:0},
+{q:"What is a chatbot?", a:["AI that edits code","AI that converses with users","AI that builds hardware"], correct:1},
+{q:"Which AI concept simulates neurons?", a:["Perceptron","Compiler","Router"], correct:0},
+{q:"Which is a type of unsupervised learning?", a:["Clustering","Classification","Regression"], correct:0},
+{q:"Which clustering algorithm is popular?", a:["K-Means","RSA","DFS"], correct:0},
+{q:"Which AI term refers to model interpretability?", a:["Explainable AI","Deep AI","Dark AI"], correct:0},
+{q:"Which AI technology is used in autonomous cars?", a:["Computer Vision","Audio Compression","VPN"], correct:0},
+{q:"What is a knowledge graph?", a:["Structured relationships between data","Graph for painting","Chart of growth"], correct:0},
+{q:"Which AI is used for game-playing agents?", a:["Reinforcement Learning","Sorting Algorithms","Memory Management"], correct:0},
+{q:"What is a large language model?", a:["Small code snippet","AI trained on huge text data","Database schema"], correct:1},
+{q:"Which company created Bard AI?", a:["Google","Amazon","Tesla"], correct:0},
+{q:"Which is a risk of AI bias?", a:["Unfair decisions","Better accuracy","More transparency"], correct:0},
+{q:"What is transfer learning?", a:["Transferring emails","Using pre-trained models for new tasks","Moving data between servers"], correct:1},
+{q:"What is data augmentation?", a:["Creating more varied training data","Deleting unused files","Encrypting data"], correct:0},
+{q:"What is the Turing Test?", a:["Testing AI for human-like intelligence","Testing software speed","Testing network security"], correct:0},
+{q:"Which is a type of generative AI?", a:["GAN","SQL","HTTP"], correct:0},
+{q:"Which GAN component generates data?", a:["Generator","Discriminator","Classifier"], correct:0},
+{q:"Which AI concept involves probabilities?", a:["Bayesian Networks","Sorting","Indexing"], correct:0},
+{q:"Which tool is widely used for AI notebooks?", a:["Jupyter","Notepad","Word"], correct:0},
+{q:"Which framework is popular for deep learning?", a:["TensorFlow","Excel","Photoshop"], correct:0},
+{q:"Which library is common for ML in Python?", a:["Scikit-learn","Flask","Django"], correct:0},
+{q:"Which database is common for AI training data?", a:["SQL","MongoDB","Any structured source"], correct:2},
+{q:"What does API stand for?", a:["Application Programming Interface","Advanced Program Index","Automated Protocol Integration"], correct:0},
+{q:"Which is a feature of cloud AI?", a:["On-demand scalability","Fixed resources","No internet"], correct:0},
+{q:"Which AI area includes speech-to-text?", a:["Natural Language Processing","Computer Graphics","Operating Systems"], correct:0},
+{q:"What is a token in language models?", a:["A unit of text","A security key","A payment system"], correct:0},
+{q:"Which AI helps detect spam emails?", a:["Classification models","Sorting algorithms","Compression tools"], correct:0},
+{q:"Which AI is used for recommendation systems?", a:["Collaborative Filtering","Packet Switching","Manual Sorting"], correct:0},
+{q:"Which technique reduces model size?", a:["Pruning","Printing","Packing"], correct:0},
+{q:"Which problem occurs with imbalanced datasets?", a:["Biased predictions","Faster training","More memory"], correct:0},
+{q:"What is reinforcement in AI?", a:["Reward-based learning","Repeating instructions","Resetting programs"], correct:0},
+{q:"Which AI can generate images?", a:["Generative Models","Sorting Algorithms","Compression Models"], correct:0},
+{q:"What is prompt engineering?", a:["Designing inputs for AI models","Building mechanical prompts","Coding in assembly"], correct:0},
+{q:"Which field overlaps AI and healthcare?", a:["Medical AI","Car Manufacturing","Astrophysics"], correct:0},
+{q:"What is a confusion matrix?", a:["Table of predictions vs actuals","Mixing data","Encrypting data"], correct:0},
+{q:"What is ROC curve used for?", a:["Evaluating classifiers","Encrypting files","Rendering graphics"], correct:0},
+{q:"Which AI is embedded in smart assistants?", a:["Natural Language Understanding","Quantum Mechanics","Network Routing"], correct:0},
+{q:"What is feature engineering?", a:["Creating meaningful input variables","Repairing software bugs","Compiling programs"], correct:0},
+{q:"What is an epoch in training?", a:["One full pass through the dataset","AI sleep cycle","CPU restart"], correct:0},
+{q:"Which optimization algorithm is widely used?", a:["Adam","Bubble Sort","DFS"], correct:0},
+{q:"What does backpropagation do?", a:["Updates neural network weights","Compresses images","Sorts arrays"], correct:0},
+{q:"Which AI technique powers voice cloning?", a:["Deep Learning","Sorting","Data Compression"], correct:0},
+{q:"Which AI is used in fraud detection?", a:["Anomaly Detection","Sorting","Archiving"], correct:0},
+{q:"What is a transformer model?", a:["Architecture for sequence modeling","Electric component","Web plugin"], correct:0},
+{q:"Which AI model uses attention mechanism?", a:["Transformers","Decision Trees","Logistic Regression"], correct:0},
+{q:"What is the main benefit of vector embeddings?", a:["Numerical representation of data","Making music","Compressing videos"], correct:0},
+{q:"What is fine-tuning?", a:["Adapting a pre-trained model","Adjusting a radio","Debugging code"], correct:0},
+{q:"Which AI system beat humans at Go?", a:["AlphaGo","Deep Blue","Watson"], correct:0},
+{q:"Which AI system beat humans at chess?", a:["Deep Blue","AlphaFold","BERT"], correct:0},
+{q:"What is GPT short for?", a:["Generative Pre-trained Transformer","General Processing Tool","Graph Prediction Tree"], correct:0},
+{q:"Which AI is used in self-driving perception?", a:["LiDAR-based models","DNS","VPN"], correct:0},
+{q:"What is model drift?", a:["Performance decline over time","Faster inference","Lower latency"], correct:0},
+{q:"Which AI focuses on reasoning?", a:["Symbolic AI","Computer Graphics","Blockchain"], correct:0},
+{q:"What is an embedding space?", a:["Mathematical space for features","New programming IDE","Backup storage"], correct:0},
+{q:"Which AI technique generates synthetic data?", a:["GANs","DNS","XML"], correct:0},
+{q:"What is hyperparameter tuning?", a:["Optimizing training settings","Debugging code","Compressing files"], correct:0},
+{q:"What is multi-modal AI?", a:["Processes multiple data types","AI with multiple CPUs","AI using many websites"], correct:0},
+{q:"What is open source AI?", a:["Freely available code","AI in the cloud","Proprietary model"], correct:0},
+{q:"Which AI library is Meta behind?", a:["PyTorch","TensorFlow","Keras"], correct:0},
+{q:"Which AI library is Google behind?", a:["TensorFlow","PyTorch","Caffe"], correct:0},
+{q:"What is zero-shot learning?", a:["Making predictions without task-specific training","Training with zero data","Making no errors"], correct:0},
+{q:"What is few-shot learning?", a:["Learning from few examples","Learning from movies","Learning at night"], correct:0},
+{q:"What is continual learning?", a:["Learning over time without forgetting","Learning in parallel","Learning in the cloud"], correct:0},
+{q:"Which AI is used for translation?", a:["Neural Machine Translation","File compression","Web scraping"], correct:0},
+{q:"Which AI task recognizes handwriting?", a:["OCR","FTP","DNS"], correct:0},
+{q:"What is federated learning?", a:["Training on devices without centralizing data","Learning in teams","Network routing"], correct:0},
+{q:"Which AI concept handles uncertainty?", a:["Fuzzy Logic","Sorting","Encryption"], correct:0},
+{q:"Which AI system folds proteins?", a:["AlphaFold","AlphaGo","Deep Blue"], correct:0},
+{q:"What is explainability important for?", a:["Trust and debugging","Slowing AI","Saving power"], correct:0},
+{q:"Which AI metric measures precision vs recall?", a:["F1 Score","RAM","Ping"], correct:0},
+{q:"Which AI field predicts future trends?", a:["Predictive Analytics","Forensic AI","Gaming"], correct:0},
+{q:"What is a model checkpoint?", a:["Saved model state","Airline ticket","Data bug"], correct:0},
+{q:"What is transfer learning good for?", a:["Saving compute and data","Making games","Encrypting files"], correct:0},
+{q:"Which AI area includes recommendation engines?", a:["Information Retrieval","Disk Management","Signal Processing"], correct:0},
+{q:"Which AI term means the same input gives same output?", a:["Deterministic","Stochastic","Chaotic"], correct:0},
+{q:"Which AI term means randomness in output?", a:["Stochastic","Deterministic","Static"], correct:0},
+{q:"Which AI learning uses feedback from environment?", a:["Reinforcement","Supervised","Unsupervised"], correct:0},
+{q:"Which AI architecture includes encoder-decoder?", a:["Transformers","Stacks","Queues"], correct:0},
+{q:"What is beam search used for?", a:["Finding best sequence outputs","Sorting lists","Rendering 3D"], correct:0},
+{q:"Which AI model predicts next token?", a:["Language Models","Image Models","Game Engines"], correct:0},
+{q:"Which AI concept uses graphs for reasoning?", a:["Graph Neural Networks","Array Sorting","Image Compression"], correct:0},
+{q:"Which AI topic studies fairness?", a:["Ethical AI","Parallel Computing","Compiler Design"], correct:0},
+{q:"Which AI concept fights adversarial inputs?", a:["Robustness","Scaling","Caching"], correct:0},
+{q:"Which AI area generates synthetic voices?", a:["Text-to-Speech","Firewall","Virtual Memory"], correct:0},
+{q:"Which AI concept is used in chat summarization?", a:["Abstractive Summarization","Web Scraping","RAM Caching"], correct:0},
+{q:"Which AI concept is used in question answering?", a:["Information Retrieval + NLP","Router Configuration","Network Pings"], correct:0},
+{q:"Which AI system writes code from prompts?", a:["Codex","Docker","Photoshop"], correct:0},
+{q:"Which AI topic handles unstructured text?", a:["Natural Language Processing","File Systems","Memory Allocation"], correct:0},
+{q:"Which AI can write poems?", a:["Language Models","Sorting","Search Engines"], correct:0}
+];
+
+// Shuffle and pick 7 questions
+let quizQuestions = [];
+let current = 0;
+let score = 0;
+
+function shuffleArray(array){
+  for(let i=array.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [array[i],array[j]]=[array[j],array[i]];
+  }
+}
+
+function startQuiz(){
+  current=0; score=0;
+  document.getElementById('result').classList.add('hidden');
+  const quizDiv=document.getElementById('quiz');
+  quizDiv.innerHTML='';
+  quizQuestions=[...questionBank];
+  shuffleArray(quizQuestions);
+  quizQuestions=quizQuestions.slice(0,TOTAL_QUESTIONS);
+  showQuestion();
+}
+
+function showQuestion(){
+  const quizDiv=document.getElementById('quiz');
+  quizDiv.innerHTML='';
+  if(current>=TOTAL_QUESTIONS){
+    showResult();
+    return;
+  }
+  const q=quizQuestions[current];
+  const qElem=document.createElement('div'); qElem.className='question'; qElem.textContent=`Q${current+1}. ${q.q}`;
+  quizDiv.appendChild(qElem);
+  q.a.forEach((optionText,index)=>{
+    const btn=document.createElement('button'); btn.textContent=optionText; btn.className='option';
+    btn.onclick=()=>checkAnswer(index);
+    quizDiv.appendChild(btn);
+  });
+}
+
+function checkAnswer(selected){
+  if(selected===quizQuestions[current].correct) score++;
+  current++; showQuestion();
+}
+
+function showResult(){
+  document.getElementById('quiz').innerHTML='';
+  document.getElementById('actions').style.display='none';
+  const resultDiv=document.getElementById('result');
+  resultDiv.classList.remove('hidden');
+  document.getElementById('scoreText').textContent=`${score}/${TOTAL_QUESTIONS}`;
+  const freebieMsg=document.getElementById('freebieMsg');
+  if(score===TOTAL_QUESTIONS) freebieMsg.classList.remove('hidden');
+  else freebieMsg.classList.add('hidden');
+  document.getElementById('actions').style.display='block';
+}
+
+document.getElementById('nextBtn').addEventListener('click',showQuestion);
+startQuiz();
+</script>
+</body>
+</html>
